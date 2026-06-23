@@ -1,0 +1,6 @@
+dxcam==0.0.5
+pygetwindow==0.0.9
+vgamepad==0.1.0
+websockets==13.1
+Pillow==11.0.0
+numpy==1.26.4
