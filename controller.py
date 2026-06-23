@@ -38,11 +38,14 @@ TRIGGER_MAX = 255
 
 
 class VirtualController:
-    def __init__(self) -> None:
+    def __init__(self, mock: bool) -> None:
+        self._mock = mock
         self._pad = vg.VX360Gamepad()
 
     def press(self, button_values: list[int]) -> None:
         """Press a set of buttons (by Button enum int values) and release all others."""
+        if self._mock:
+            return
         self._pad.reset()
 
         for val in button_values:
@@ -59,5 +62,7 @@ class VirtualController:
         self._pad.update()
 
     def release_all(self) -> None:
+        if self._mock:
+            return
         self._pad.reset()
         self._pad.update()

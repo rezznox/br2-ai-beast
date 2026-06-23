@@ -41,12 +41,13 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="BR2-AI-Beast capture client")
     p.add_argument("--host", default=os.getenv("WS_HOST", "127.0.0.1"))
     p.add_argument("--port", type=int, default=int(os.getenv("WS_PORT", "8765")))
+    p.add_argument("--control", type=bool, default=bool(os.getenv("CONTROL", False)))
     return p.parse_args()
 
 
-async def run(host: str, port: int) -> None:
+async def run(host: str, port: int, control: bool) -> None:
     uri = f"ws://{host}:{port}/ws"
-    controller = VirtualController()
+    controller = VirtualController(control)
     logger.info("Connecting to %s …", uri)
 
     async with websockets.connect(uri, max_size=10 * 1024 * 1024) as ws:
@@ -75,7 +76,7 @@ async def run(host: str, port: int) -> None:
 def main() -> None:
     args = parse_args()
     try:
-        asyncio.run(run(args.host, args.port))
+        asyncio.run(run(args.host, args.port, args.control))
     except KeyboardInterrupt:
         logger.info("Stopped.")
         sys.exit(0)
