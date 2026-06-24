@@ -3,3 +3,45 @@ frames
 memory-editor
 .vscode
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environments
+.env
+*.env.local
+.conda/
+
+# Models (large binaries — commit only .gitkeep)
+models/*.zip
+models/*.pkl
+models/best_*/
+models/ppo_br2_*/
+
+# Logs
+logs/
+runs/
+*.tfevents.*
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Keep directory structure markers
+!models/.gitkeep
+!logs/.gitkeep

@@ -1,0 +1,94 @@
+# BR2-AI-Beast
+
+A reinforcement learning agent that learns to play **Bloody Roar 2** on the DuckStation PS1 emulator.
+It uses Proximal Policy Optimization (PPO) via Stable-Baselines3, training directly from raw screen captures.
+
+## How it works
+
+```
+Windows (DuckStation)              Windows (Python)
+┌─────────────────┐   frames       ┌──────────────────────┐
+│  DuckStation    │ ─────────────► │  training/server.py  │
+│  (PS1 emulator) │                │  (FastAPI + PPO)     │
+└─────────────────┘ ◄───────────── └──────────────────────┘
+                      button cmds
+```
+
+1. **Capture client** (`capture/ws_client.py`) grabs frames from the DuckStation window using DXGI, compresses them as JPEG, and streams them over a WebSocket.
+2. **Inference server** (`training/main.py`) receives frames, preprocesses them (resize → grayscale → normalize), stacks 4 frames for temporal context, and runs the PPO agent to select an action.
+3. Actions are sent back as JSON and the client presses the corresponding buttons via a virtual Xbox 360 controller (ViGEm / vgamepad).
+
+## Project structure
+
+```
+br2-ai-beast/
+├── capture/
+│   ├── capture.py       # DuckStation window capture (dxcam, Windows only)
+│   └── ws_client.py     # WebSocket client — streams frames, executes actions
+├── training/
+│   ├── main.py          # Entry point: --mode inference | train
+│   ├── server.py        # FastAPI WebSocket inference server
+│   ├── agent.py         # BR2Agent wrapper around SB3 PPO
+│   ├── env.py           # Gymnasium environment for training loop
+│   ├── train.py         # PPO training loop
+│   ├── vision.py        # Frame decode, preprocess, FrameStacker
+│   └── actions.py       # Discrete action set (18 actions)
+├── controller.py        # VirtualController — maps actions to vgamepad inputs
+├── conftest.py          # Adds project root to sys.path for pytest
+├── run.ps1              # Single-command launcher (see below)
+└── environment.yml      # Conda environment definition
+```
+
+## Setup
+
+```powershell
+conda env create -f environment.yml
+conda activate br2-ai
+```
+
+> Requires Windows with ViGEm Bus Driver installed for virtual controller support.
+> See: https://github.com/nefarius/ViGEmBus/releases
+
+Copy `.env.sample` to `.env` and fill in your values:
+
+```
+DUCKSTATION_WINDOW_TITLE=<exact window title of DuckStation>
+WS_HOST=0.0.0.0
+WS_PORT=8765
+```
+
+## Running
+
+### Inference (play with a trained model)
+
+```powershell
+.\run.ps1
+.\run.ps1 -Control          # enable virtual controller input
+.\run.ps1 -Model models/ppo_br2.zip -Control
+```
+
+This starts the inference server in a new window, waits for it to be ready, then launches the capture client.
+
+### Training
+
+```powershell
+.\run.ps1 -Mode train
+.\run.ps1 -Mode train -Timesteps 2000000
+.\run.ps1 -Mode train -Model models/checkpoint.zip -Timesteps 1000000
+```
+
+### Run scripts directly
+
+```powershell
+# Server only
+python -m training.main --mode inference --host 0.0.0.0 --port 8765
+
+# Client only (server must already be running)
+python -m capture.ws_client --host 127.0.0.1 --port 8765
+```
+
+## Tests
+
+```powershell
+pytest
+```
