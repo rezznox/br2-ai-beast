@@ -1,0 +1,26 @@
+name: br2-ai
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - numpy=1.26.4
+  - pillow=11.0.0
+  - opencv=4.10.0
+  - pydantic=2.10.4
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu130
+      - torch==2.12.0
+      - fastapi==0.115.0
+      - uvicorn[standard]==0.32.0
+      - websockets==13.1
+      - stable-baselines3>=2.4.0
+      - gymnasium>=1.0
+      - python-dotenv==1.0.1
+      - tensorboard==2.18.0
+      - httpx==0.28.0
+      - dxcam==0.0.5
+      - pygetwindow==0.0.9
+      - vgamepad==0.1.0

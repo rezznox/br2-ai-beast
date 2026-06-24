@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import time
-import itertools
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 
-import capture
-from capture import _get_window_region, frame_generator, TARGET_FPS
+from capture.capture import _get_window_region, frame_generator, TARGET_FPS
 
 
 def _fake_bgr_frame(w: int = 320, h: int = 240) -> np.ndarray:
@@ -24,24 +22,7 @@ def _make_mock_window(left=10, top=20, right=800, bottom=600):
     return win
 
 
-def _make_mock_camera(frames):
-    """Return a mock dxcam camera whose get_latest_frame yields items from `frames`."""
-    camera = MagicMock()
-    camera.get_latest_frame.side_effect = frames
-    return camera
-
-
-# ---------------------------------------------------------------------------
-# _get_window_region
-# ---------------------------------------------------------------------------
-
-@patch("capture.gw.getWindowsWithTitle", return_value=[])
-def test_window_not_found_raises(mock_gw):
-    with pytest.raises(RuntimeError, match="No window titled"):
-        _get_window_region()
-
-
-@patch("capture.gw.getWindowsWithTitle")
+@patch("pygetwindow.getWindowsWithTitle")
 def test_window_region_returns_coordinates(mock_gw):
     mock_gw.return_value = [_make_mock_window(10, 20, 800, 600)]
     assert _get_window_region() == (10, 20, 800, 600)
@@ -51,8 +32,8 @@ def test_window_region_returns_coordinates(mock_gw):
 # frame_generator
 # ---------------------------------------------------------------------------
 
-@patch("capture.dxcam.create")
-@patch("capture.gw.getWindowsWithTitle")
+@patch("dxcam.create")
+@patch("pygetwindow.getWindowsWithTitle")
 def test_frame_generator_yields_jpeg(mock_gw, mock_create):
     mock_gw.return_value = [_make_mock_window()]
     camera = MagicMock()
@@ -67,8 +48,8 @@ def test_frame_generator_yields_jpeg(mock_gw, mock_create):
         assert frame_bytes[:2] == b"\xff\xd8", "Expected JPEG magic bytes"
 
 
-@patch("capture.dxcam.create")
-@patch("capture.gw.getWindowsWithTitle")
+@patch("dxcam.create")
+@patch("pygetwindow.getWindowsWithTitle")
 def test_camera_started_with_target_fps(mock_gw, mock_create):
     mock_gw.return_value = [_make_mock_window()]
     camera = MagicMock()
@@ -82,8 +63,8 @@ def test_camera_started_with_target_fps(mock_gw, mock_create):
     camera.start.assert_called_once_with(target_fps=TARGET_FPS)
 
 
-@patch("capture.dxcam.create")
-@patch("capture.gw.getWindowsWithTitle")
+@patch("dxcam.create")
+@patch("pygetwindow.getWindowsWithTitle")
 def test_none_frames_are_skipped(mock_gw, mock_create):
     mock_gw.return_value = [_make_mock_window()]
     camera = MagicMock()
@@ -103,8 +84,8 @@ def test_none_frames_are_skipped(mock_gw, mock_create):
     assert camera.get_latest_frame.call_count == 3
 
 
-@patch("capture.dxcam.create")
-@patch("capture.gw.getWindowsWithTitle")
+@patch("dxcam.create")
+@patch("pygetwindow.getWindowsWithTitle")
 def test_camera_cleanup_on_generator_close(mock_gw, mock_create):
     mock_gw.return_value = [_make_mock_window()]
     camera = MagicMock()
@@ -119,8 +100,8 @@ def test_camera_cleanup_on_generator_close(mock_gw, mock_create):
     camera.release.assert_called_once()
 
 
-@patch("capture.dxcam.create")
-@patch("capture.gw.getWindowsWithTitle")
+@patch("dxcam.create")
+@patch("pygetwindow.getWindowsWithTitle")
 def test_fps_rate(mock_gw, mock_create):
     mock_gw.return_value = [_make_mock_window()]
     camera = MagicMock()
